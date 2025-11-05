@@ -4,14 +4,17 @@ This project demonstrates how to submit orders to the Decibel DEX using Java and
 
 ## Overview
 
-The example mirrors the TypeScript SDK's `placeOrder` functionality and e2e test setup, showing how to:
-- Generate a new random Ed25519 account
-- Fund the account with APT from the Netna faucet
-- Mint USDC tokens to the account
-- Deposit USDC to the primary subaccount
-- Calculate derived addresses (subaccount, market)
-- Build and submit a `place_order_to_subaccount` transaction to the APT_USDC market
-- Wait for transaction confirmation
+This project includes two example applications:
+
+1. **OrderExample**: Submit a single order to the APT-PERP market
+2. **BulkOrderExample**: Interactive bulk order management bot that maintains a spread around a mid price
+
+Both examples demonstrate:
+- Account initialization (from private key or new generation)
+- Automatic funding via Netna faucet
+- USDC minting and deposit to subaccount
+- Derived address calculation (subaccount, market)
+- Transaction building and submission using the Japtos SDK
 
 ## Prerequisites
 
@@ -24,15 +27,19 @@ The example mirrors the TypeScript SDK's `placeOrder` functionality and e2e test
 ## Project Structure
 
 ```
-java/
+.
 ├── pom.xml                                    # Maven configuration
 ├── src/
 │   └── main/
 │       ├── java/
-│       │   └── com/decibel/example/
-│       │       └── SubmitOrder.java          # Main application
+│       │   └── com/decibel/
+│       │       ├── OrderExample.java          # Single order example
+│       │       ├── BulkOrderExample.java      # Bulk order bot example
+│       │       ├── DecibelTransactions.java   # Transaction utilities
+│       │       ├── DecibelUtils.java          # Address derivation & utils
+│       │       └── InputUtils.java            # Config & account loading
 │       └── resources/
-│           └── config.properties              # Configuration file
+│           └── config.properties.example      # Configuration template
 └── README.md                                  # This file
 ```
 
@@ -42,37 +49,38 @@ java/
 
 The project uses Maven to manage dependencies. The Japtos SDK will be automatically downloaded when you build the project.
 
-### 2. Adjust Order Parameters (Optional)
+### 2. Configure Your Account (Optional)
 
-The example uses sensible defaults, but you can customize the order parameters by editing `config.properties`:
+Copy the example configuration file:
+
+```bash
+cp src/main/resources/config.properties.example src/main/resources/config.properties
+```
+
+Edit `config.properties` to customize:
 
 ```properties
-# APT_USDC market address on Netna
-order.market.address=0xe6de4f6ec47f1bc2ab73920e9f202953e60482e1c1a90e7eef3ee45c8aafee36
+# Aptos network configuration
+aptos.fullnode.url=https://api.netna.staging.aptoslabs.com/v1
+chain.id=204
 
-# Price in chain units with 6 decimals (default: 10000000 = $10)
-order.price=10000000
+# Decibel deployment package address
+deployment.package=0x1234...
 
-# Size in chain units with 6 decimals (default: 100000 = 0.1 APT)
-order.size=100000
+# Optional: Provide a private key (if not provided, a new account is generated)
+private.key=0xYOUR_PRIVATE_KEY_HEX
 
-# Buy (true) or Sell (false) - default: true
-order.is.buy=true
-
-# Time in force (default: 2=ImmediateOrCancel)
-# 0=GoodTillCanceled, 1=PostOnly, 2=ImmediateOrCancel
-order.time.in.force=2
-
-# Reduce only order (default: false)
-order.is.reduce.only=false
+# Trading API URL (for bulk orders)
+trading.api.url=https://trading-api-http-dev-netna-us-central1-410192433417.us-central1.run.app
 ```
+
+**Note:** If you don't provide a private key, a new account will be automatically generated and funded.
 
 ## Building
 
 Compile and package the application:
 
 ```bash
-cd java/
 mvn clean package
 ```
 
@@ -80,58 +88,100 @@ This creates a self-contained JAR file in `target/decibel-java-example-1.0-SNAPS
 
 ## Running
 
-### Using Maven
+### Single Order Example
+
+Submit a single order to the APT-PERP market:
 
 ```bash
-mvn exec:java -Dexec.mainClass="com.decibel.example.SubmitOrder"
+# Using Maven
+mvn exec:java -Dexec.mainClass="com.decibel.OrderExample"
+
+# Or using the JAR directly
+java -cp target/decibel-java-example-1.0-SNAPSHOT.jar com.decibel.OrderExample
 ```
 
-### Using the JAR directly
+### Bulk Order Example
+
+Run the interactive bulk order bot:
 
 ```bash
-java -jar target/decibel-java-example-1.0-SNAPSHOT.jar
+# Using Maven
+mvn exec:java -Dexec.mainClass="com.decibel.BulkOrderExample"
+
+# Or using the JAR directly
+java -cp target/decibel-java-example-1.0-SNAPSHOT.jar com.decibel.BulkOrderExample
 ```
+
+The bulk order bot provides an interactive interface:
+- Press `1` + ENTER to move all orders UP 1%
+- Press `2` + ENTER to move all orders DOWN 1%
+- Press `f` + ENTER to fund account (faucet + mint + deposit)
+- Press `x` + ENTER to cancel orders and exit
 
 ## Expected Output
 
-When successful, you should see output similar to:
+### Single Order Example
 
 ```
-INFO  - Connected to Aptos node: https://api.netna.staging.aptoslabs.com/v1
-INFO  - Generated new account: 0x123abc...
-INFO  - Requesting APT from faucet...
-INFO  - ✅ Account funded with APT
-INFO  - Minting 100.0 USDC...
-INFO  - ✅ USDC minted
-INFO  - Depositing 50.0 USDC to subaccount: 0x789ghi...
-INFO  - ✅ USDC deposited to subaccount
+INFO  - Loaded account from private key: 0x123abc...
 INFO  - Market: 0xe6de4f6ec47f1bc2ab73920e9f202953e60482e1c1a90e7eef3ee45c8aafee36
 INFO  - Subaccount: 0x789ghi...
 INFO  - Order: BUY 100000 @ 10000000 (TIF: 2, ReduceOnly: false)
 INFO  - Submitting transaction...
 INFO  - Transaction submitted: 0xabc123...
-INFO  - Waiting for transaction to be committed...
 INFO  - Transaction committed successfully!
 
-✅ Order submitted successfully!
+✅ Single order submitted successfully!
 Transaction Hash: 0xabc123...
-
 View on explorer:
-https://explorer.aptoslabs.com/txn/0xabc123...?network=custom
+https://explorer.aptoslabs.com/txn/0xabc123...?network=decibel
+```
+
+### Bulk Order Example
+
+```
+🤖 Interactive Bulk Order Bot
+==============================
+Mid Price: $2.60
+Spread: ±1% and ±2%
+
+Press '1' + ENTER to move all orders UP 1% (↑)
+Press '2' + ENTER to move all orders DOWN 1% (↓)
+Press 'f' + ENTER to fund account (faucet + mint + deposit)
+Press 'x' + ENTER to cancel orders and exit
+
+Enter command (1/2/f/x): 1
+↑ Moving UP to mid $2.63
+✅ Orders updated | Tx: 0xdef456...
+
+Enter command (1/2/f/x): x
+🛑 Cancelling orders and stopping bot...
+✅ Orders cancelled | Tx: 0x789abc...
 ```
 
 ## How It Works
 
-### Automatic Setup
+### Account Initialization
 
-The example automatically sets up a complete testing environment:
+The examples support two modes:
 
-1. **Account Generation**: Creates a new random Ed25519 account using `SecureRandom`
-2. **APT Funding**: Requests 10 APT from the Netna faucet via HTTP POST
-3. **USDC Minting**: Calls `package::usdc::mint` to mint 100 USDC to the account
-4. **Subaccount Deposit**: Calls `package::dex_accounts::deposit_to_subaccount` to deposit 50 USDC
+1. **Existing Account**: Load from `private.key` in `config.properties`
+2. **New Account**: Generate a new Ed25519 account and automatically fund it
 
-This mirrors the setup used in the TypeScript e2e tests.
+When generating a new account, the code:
+- Creates a random Ed25519 account using `SecureRandom`
+- Requests APT from the Netna faucet
+- Mints 100 USDC to the account
+- Deposits 50 USDC to the primary subaccount
+
+### Bulk Order Bot
+
+The `BulkOrderExample` maintains a spread around a mid price:
+- Fetches the current bulk order sequence number from the trading API
+- Places 2 bids (1% and 2% below mid) and 2 asks (1% and 2% above mid)
+- Allows interactive adjustment of the mid price up/down by 1%
+- Automatically cancels and replaces orders with each update
+- Increments the sequence number to avoid conflicts
 
 ### Address Derivation
 
@@ -141,10 +191,11 @@ The example derives the primary subaccount address using the same logic as the T
 
 The market address for APT_USDC is configured directly: `0xe6de4f6ec47f1bc2ab73920e9f202953e60482e1c1a90e7eef3ee45c8aafee36`
 
-### Transaction Structure
+### Transaction Functions
 
-The transaction calls the entry function:
+The examples use several Move entry functions:
 
+**Single Order:**
 ```
 <package>::dex_accounts::place_order_to_subaccount(
     subaccount_addr: address,
@@ -165,7 +216,25 @@ The transaction calls the entry function:
 )
 ```
 
-Optional parameters (stop price, take profit, stop loss, builder info) are set to `None` in this example.
+**Bulk Orders:**
+```
+<package>::dex_accounts::place_bulk_order_to_subaccount(
+    market_addr: address,
+    sequence_num: u64,
+    bid_prices: vector<u64>,
+    bid_sizes: vector<u64>,
+    ask_prices: vector<u64>,
+    ask_sizes: vector<u64>
+)
+```
+
+**Cancel Bulk Orders:**
+```
+<package>::dex_accounts::cancel_bulk_order_to_subaccount(
+    market_addr: address,
+    sequence_num: u64
+)
+```
 
 ## Japtos SDK
 
