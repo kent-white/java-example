@@ -1,0 +1,20 @@
+# Decibel DEX Configuration
+# Based on NETNA_CONFIG from TypeScript SDK
+# Copy this file to config.properties if you want to customize settings
+
+# Network Configuration
+aptos.fullnode.url=https://api.netna.staging.aptoslabs.com
+chain.id=204
+
+# Decibel Contract Deployment
+# Package address from NETNA_DEPLOYMENT
+deployment.package=0xb8a5788314451ce4d2fbbad32e1bad88d4184b73943b7fe5166eab93cf1a5a95
+deployment.usdc=0x26a76cae6a96ad084c7d5d9ca3e890b4e14f617d7bda6c8f45fdf9f20aa1c49b
+
+# Trading API URL
+trading.api.url=https://trading-api-http-dev-netna-us-central1-410192433417.us-central1.run.app
+
+# Account Configuration (Optional)
+# If provided, use this private key for the account. Otherwise, generate a new account.
+# Private key should be in hex format (64 characters, with or without 0x prefix)
+# account.private.key=0x1234567890abcdef...
