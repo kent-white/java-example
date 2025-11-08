@@ -63,7 +63,14 @@ public class BulkOrderExample {
             
             // Get the trading API URL from config
             String tradingApiUrl = example.config.getProperty("trading.api.url", "https://trading-api-http-dev-netna-us-central1-410192433417.us-central1.run.app");
-            
+
+            // Fetch market configuration
+            MarketConfig marketConfig = DecibelUtils.getMarketConfig(tradingApiUrl, example.marketAddress);
+            if (marketConfig == null) {
+                throw new RuntimeException("Market configuration not found for address: " + example.marketAddress);
+            }
+            logger.info("Market config loaded: {}", marketConfig);
+
             // Get the current bulk order sequence number from the trading API
             long sequenceNumber = DecibelUtils.getBulkOrderSequenceNumber(
                 tradingApiUrl,
@@ -158,16 +165,18 @@ public class BulkOrderExample {
                 }
                 
                 // Calculate bid and ask prices from mid price with fixed offsets
-                List<Long> bidPrices = Arrays.asList(
-                    (long)(midPrice * (1 - bidOffset1)),  // 1% below mid
-                    (long)(midPrice * (1 - bidOffset2))   // 2% below mid
-                );
-                List<Long> bidSizes = Arrays.asList(orderSize, orderSize);
-                List<Long> askPrices = Arrays.asList(
-                    (long)(midPrice * (1 + askOffset1)),  // 1% above mid
-                    (long)(midPrice * (1 + askOffset2))   // 2% above mid
-                );
-                List<Long> askSizes = Arrays.asList(orderSize, orderSize);
+                // Round prices to valid tick increments and sizes to valid lot increments
+                long bidPrice1 = marketConfig.priceToTickInteger((long)(midPrice * (1 - bidOffset1)), false);  // Round down for bids
+                long bidPrice2 = marketConfig.priceToTickInteger((long)(midPrice * (1 - bidOffset2)), false);
+                long askPrice1 = marketConfig.priceToTickInteger((long)(midPrice * (1 + askOffset1)), true);   // Round up for asks
+                long askPrice2 = marketConfig.priceToTickInteger((long)(midPrice * (1 + askOffset2)), true);
+
+                long roundedSize = marketConfig.sizeToLotInteger(orderSize);
+
+                List<Long> bidPrices = Arrays.asList(bidPrice1, bidPrice2);
+                List<Long> bidSizes = Arrays.asList(roundedSize, roundedSize);
+                List<Long> askPrices = Arrays.asList(askPrice1, askPrice2);
+                List<Long> askSizes = Arrays.asList(roundedSize, roundedSize);
                 
                 logger.info("Seq {}: Bids [{}, {}] Asks [{}, {}]",
                     sequenceNumber,
@@ -176,7 +185,10 @@ public class BulkOrderExample {
                 
                 try {
                     String txHash = example.submitBulkOrders(sequenceNumber, bidPrices, bidSizes, askPrices, askSizes);
-                    System.out.println("✅ Orders updated | Tx: " + txHash.substring(0, 10) + "...\n");
+                    System.out.println("✅ Orders updated For subaccount: " + subaccountAddr + " | Tx: " + txHash.substring(0, 10) + "...\n");
+                    System.out.println("View on explorer:");
+                    System.out.println("https://explorer.aptoslabs.com/txn/" + txHash + "?network=decibel");
+
                     sequenceNumber++;
                 } catch (Exception e) {
                     logger.error("Failed to submit bulk orders", e);
