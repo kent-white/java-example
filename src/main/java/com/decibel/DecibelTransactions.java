@@ -166,16 +166,100 @@ public class DecibelTransactions {
             System.currentTimeMillis() / 1000 + 3600,
             chainId
         );
+
+        System.out.println("Raw transaction: " + rawTx);
         
         SignedTransaction signedTx = new SignedTransaction(
             rawTx,
             account.signTransactionWithAuthenticator(rawTx)
         );
+
+        System.out.println("Signed transaction: " + signedTx);
         
         PendingTransaction pendingTx = client.submitTransaction(signedTx);
         String txHash = pendingTx.getHash();
         client.waitForTransaction(txHash);
         
+        return txHash;
+    }
+
+    /**
+     * Submit an order to Decibel DEX using orderless transaction (replayProtectionNonce instead of sequence number).
+     */
+    public static String placeOrder(
+            AptosClient client,
+            Ed25519Account account,
+            AccountAddress packageAddress,
+            AccountAddress marketAddress,
+            long replayProtectionNonce,
+            long price,
+            long size,
+            boolean isBuy,
+            int timeInForce,
+            boolean isReduceOnly,
+            int chainId) throws Exception {
+
+        AccountAddress subaccountAddr = DecibelUtils.getPrimarySubaccountAddr(account.getAccountAddress());
+
+        ModuleId moduleId = new ModuleId(packageAddress, new Identifier("dex_accounts"));
+
+        List<TransactionArgument> functionArgs = new ArrayList<>();
+        functionArgs.add(new TransactionArgument.AccountAddress(subaccountAddr));
+        functionArgs.add(new TransactionArgument.AccountAddress(marketAddress));
+        functionArgs.add(new TransactionArgument.U64(price));
+        functionArgs.add(new TransactionArgument.U64(size));
+        functionArgs.add(new TransactionArgument.Bool(isBuy));
+        functionArgs.add(new TransactionArgument.U8((byte) timeInForce));
+        functionArgs.add(new TransactionArgument.Bool(isReduceOnly));
+        // Optional parameters
+        functionArgs.add(MoveOption.<TransactionArgument.String>empty());
+        functionArgs.add(MoveOption.<TransactionArgument.U64>empty());
+        functionArgs.add(MoveOption.<TransactionArgument.U64>empty());
+        functionArgs.add(MoveOption.<TransactionArgument.U64>empty());
+        functionArgs.add(MoveOption.<TransactionArgument.U64>empty());
+        functionArgs.add(MoveOption.<TransactionArgument.U64>empty());
+        functionArgs.add(MoveOption.<TransactionArgument.AccountAddress>empty());
+        functionArgs.add(MoveOption.<TransactionArgument.U64>empty());
+
+        // Build EntryFunctionPayload first for reliable serialization
+        EntryFunctionPayload entryPayload = new EntryFunctionPayload(
+            moduleId,
+            new Identifier("place_order_to_subaccount"),
+            Arrays.asList(),
+            functionArgs
+        );
+
+        // Build orderless transaction payload
+        TransactionPayload payload = new TransactionInnerPayloadV1(
+            TransactionExecutableEntryFunction.fromEntryFunctionPayload(entryPayload),
+            new TransactionExtraConfigV1(null, replayProtectionNonce)
+        );
+
+        long unusedSequenceNumber = 0xDEADBEEFL; // unused when using replayProtectionNonce
+
+        RawTransaction rawTx = new RawTransaction(
+            account.getAccountAddress(),
+            unusedSequenceNumber,
+            payload,
+            1000000L,
+            100L,
+            (System.currentTimeMillis() / 1000) + 60, // 60s expiry for orderless
+            chainId
+        );
+
+        System.out.println("Raw orderless transaction: " + rawTx);
+
+        SignedTransaction signedTx = new SignedTransaction(
+            rawTx,
+            account.signTransactionWithAuthenticator(rawTx)
+        );
+
+        System.out.println("Signed orderless transaction: " + signedTx);
+
+        PendingTransaction pendingTx = client.submitTransaction(signedTx);
+        String txHash = pendingTx.getHash();
+        client.waitForTransaction(txHash);
+
         return txHash;
     }
     
