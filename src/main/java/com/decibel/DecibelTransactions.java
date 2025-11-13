@@ -221,17 +221,14 @@ public class DecibelTransactions {
         functionArgs.add(MoveOption.<TransactionArgument.AccountAddress>empty());
         functionArgs.add(MoveOption.<TransactionArgument.U64>empty());
 
-        // Build EntryFunctionPayload first for reliable serialization
-        EntryFunctionPayload entryPayload = new EntryFunctionPayload(
-            moduleId,
-            new Identifier("place_order_to_subaccount"),
-            Arrays.asList(),
-            functionArgs
-        );
-
-        // Build orderless transaction payload
+        // Build orderless transaction payload directly (encode args without TransactionArgument tags)
         TransactionPayload payload = new TransactionInnerPayloadV1(
-            TransactionExecutableEntryFunction.fromEntryFunctionPayload(entryPayload),
+            new TransactionExecutableEntryFunction(
+                moduleId,
+                new Identifier("place_order_to_subaccount"),
+                Arrays.asList(),
+                functionArgs
+            ),
             new TransactionExtraConfigV1(null, replayProtectionNonce)
         );
 
