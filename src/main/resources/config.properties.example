@@ -4,7 +4,7 @@
 
 # Network Configuration
 aptos.fullnode.url=https://api.netna.staging.aptoslabs.com
-chain.id=204
+chain.id=205
 
 # Decibel Contract Deployment
 # Package address from NETNA_DEPLOYMENT
