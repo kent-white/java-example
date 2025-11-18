@@ -239,25 +239,51 @@ public class DecibelTransactions {
         
         return txHash;
     }
-    
-    /**
-     * Cancel bulk orders by submitting empty bid and ask lists.
-     * This effectively cancels all orders for the given sequence number.
-     */
+
     public static String cancelBulkOrders(
             AptosClient client,
             Ed25519Account account,
             AccountAddress packageAddress,
             AccountAddress marketAddress,
-            long sequenceNumber,
             int chainId) throws Exception {
         
-        // Submit empty vectors to cancel all orders
-        List<Long> emptyPrices = new ArrayList<>();
-        List<Long> emptySizes = new ArrayList<>();
+        AccountAddress subaccountAddr = DecibelUtils.getPrimarySubaccountAddr(account.getAccountAddress());
         
-        return placeBulkOrders(
-            client, account, packageAddress, marketAddress,
-            sequenceNumber, emptyPrices, emptySizes, emptyPrices, emptySizes, chainId);
+        ModuleId moduleId = new ModuleId(packageAddress, new Identifier("dex_accounts"));
+        
+        List<TransactionArgument> functionArgs = new ArrayList<>();
+        functionArgs.add(new TransactionArgument.AccountAddress(subaccountAddr));
+        functionArgs.add(new TransactionArgument.AccountAddress(marketAddress));
+        
+        TransactionPayload payload = new EntryFunctionPayload(
+            moduleId,
+            new Identifier("cancel_bulk_order_to_subaccount"),
+            Arrays.asList(),
+            functionArgs
+        );
+        
+        long accountSequenceNumber = client.getNextSequenceNumber(account.getAccountAddress());
+        
+        RawTransaction rawTx = new RawTransaction(
+            account.getAccountAddress(),
+            accountSequenceNumber,
+            payload,
+            1000000L,
+            100L,
+            System.currentTimeMillis() / 1000 + 3600,
+            chainId
+        );
+        
+        SignedTransaction signedTx = new SignedTransaction(
+            rawTx,
+            account.signTransactionWithAuthenticator(rawTx)
+        );
+        
+        PendingTransaction pendingTx = client.submitTransaction(signedTx);
+        String txHash = pendingTx.getHash();
+        client.waitForTransaction(txHash);
+        
+        return txHash;
     }
+
 }

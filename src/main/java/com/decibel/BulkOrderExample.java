@@ -114,7 +114,7 @@ public class BulkOrderExample {
                     try {
                         String txHash = DecibelTransactions.cancelBulkOrders(
                             example.client, example.account, example.packageAddress, 
-                            example.marketAddress, sequenceNumber, example.chainId);
+                            example.marketAddress, example.chainId);
                         System.out.println("✅ Orders cancelled | Tx: " + txHash.substring(0, 10) + "...");
                     } catch (Exception e) {
                         logger.error("Failed to cancel orders", e);
@@ -166,11 +166,21 @@ public class BulkOrderExample {
                 
                 // Calculate bid and ask prices from mid price with fixed offsets
                 // Round prices to valid tick increments and sizes to valid lot increments
-                long bidPrice1 = marketConfig.priceToTickInteger((long)(midPrice * (1 - bidOffset1)), false);  // Round down for bids
-                long bidPrice2 = marketConfig.priceToTickInteger((long)(midPrice * (1 - bidOffset2)), false);
+                logger.info("Mid Price: {}", midPrice);
+                logger.info("Bid Offset 1: {}", bidOffset1);
+                logger.info("Bid Offset 2: {}", bidOffset2);
+                logger.info("Ask Offset 1: {}", askOffset1);
+                logger.info("Ask Offset 2: {}", askOffset2);
+                long bidPrice1 = marketConfig.priceToTickInteger((long)(midPrice * (1 - bidOffset1)), true);  // Round down for bids
+                long bidPrice2 = marketConfig.priceToTickInteger((long)(midPrice * (1 - bidOffset2)), true);
                 long askPrice1 = marketConfig.priceToTickInteger((long)(midPrice * (1 + askOffset1)), true);   // Round up for asks
                 long askPrice2 = marketConfig.priceToTickInteger((long)(midPrice * (1 + askOffset2)), true);
 
+                logger.info("Bid Price 1: {}", bidPrice1);
+                logger.info("Bid Price 2: {}", bidPrice2);
+                logger.info("Ask Price 1: {}", askPrice1);
+                logger.info("Ask Price 2: {}", askPrice2);
+                
                 long roundedSize = marketConfig.sizeToLotInteger(orderSize);
 
                 List<Long> bidPrices = Arrays.asList(bidPrice1, bidPrice2);
