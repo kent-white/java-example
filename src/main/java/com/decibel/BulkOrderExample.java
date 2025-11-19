@@ -62,7 +62,7 @@ public class BulkOrderExample {
             logger.info("Subaccount: {}", subaccountAddr);
             
             // Get the trading API URL from config
-            String tradingApiUrl = example.config.getProperty("trading.api.url", "https://trading-api-http-dev-netna-us-central1-410192433417.us-central1.run.app");
+            String tradingApiUrl = example.config.getProperty("trading.api.url", "https://api.netna.aptoslabs.com/decibel");
 
             // Fetch market configuration
             MarketConfig marketConfig = DecibelUtils.getMarketConfig(tradingApiUrl, example.marketAddress);

@@ -12,7 +12,7 @@ deployment.package=0xb8a5788314451ce4d2fbbad32e1bad88d4184b73943b7fe5166eab93cf1
 deployment.usdc=0x26a76cae6a96ad084c7d5d9ca3e890b4e14f617d7bda6c8f45fdf9f20aa1c49b
 
 # Trading API URL
-trading.api.url=https://trading-api-http-dev-netna-us-central1-410192433417.us-central1.run.app
+trading.api.url=https://api.netna.aptoslabs.com/decibel
 
 # Account Configuration (Optional)
 # If provided, use this private key for the account. Otherwise, generate a new account.
