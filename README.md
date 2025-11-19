@@ -71,7 +71,7 @@ deployment.package=0x1234...
 private.key=0xYOUR_PRIVATE_KEY_HEX
 
 # Trading API URL (for bulk orders)
-trading.api.url=https://trading-api-http-dev-netna-us-central1-410192433417.us-central1.run.app
+trading.api.url=https://api.netna.aptoslabs.com/decibel
 ```
 
 **Note:** If you don't provide a private key, a new account will be automatically generated and funded.
