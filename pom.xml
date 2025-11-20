@@ -16,13 +16,13 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        <japtos.version>1.1.7</japtos.version>
+        <japtos.version>1.2.0-SNAPSHOT</japtos.version>
     </properties>
 
     <dependencies>
         <!-- Japtos SDK from Maven Central -->
         <dependency>
-            <groupId>io.github.aptos-labs</groupId>
+            <groupId>com.aptoslabs</groupId>
             <artifactId>japtos</artifactId>
             <version>${japtos.version}</version>
         </dependency>
