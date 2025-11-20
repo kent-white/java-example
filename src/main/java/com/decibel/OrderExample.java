@@ -56,9 +56,13 @@ public class OrderExample {
         logger.info("Order: {} {} @ {} (TIF: {}, ReduceOnly: {})", 
                    isBuy ? "BUY" : "SELL", size, price, timeInForce, isReduceOnly);
         
-        logger.info("Submitting transaction...");
+        logger.info("Submitting transaction (orderless with nonce)...");
+        long replayProtectionNonce = System.currentTimeMillis();
+        logger.info("Using replayProtectionNonce: {}", replayProtectionNonce);
+
         String txHash = DecibelTransactions.placeOrder(
-            client, account, packageAddress, marketAddress, 
+            client, account, packageAddress, marketAddress,
+            replayProtectionNonce,
             price, size, isBuy, timeInForce, isReduceOnly, chainId);
         logger.info("Transaction submitted: {}", txHash);
         logger.info("Transaction committed successfully!");
