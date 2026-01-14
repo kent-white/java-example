@@ -118,6 +118,7 @@ public class DecibelTransactions {
             AptosClient client,
             Ed25519Account account,
             AccountAddress packageAddress,
+            AccountAddress subaccountAddr,
             AccountAddress marketAddress,
             long price,
             long size,
@@ -125,8 +126,6 @@ public class DecibelTransactions {
             int timeInForce,
             boolean isReduceOnly,
             int chainId) throws Exception {
-        
-        AccountAddress subaccountAddr = DecibelUtils.getPrimarySubaccountAddr(account.getAccountAddress());
         
         ModuleId moduleId = new ModuleId(packageAddress, new Identifier("dex_accounts"));
         
@@ -186,6 +185,7 @@ public class DecibelTransactions {
             AptosClient client,
             Ed25519Account account,
             AccountAddress packageAddress,
+            AccountAddress subaccountAddr,
             AccountAddress marketAddress,
             long sequenceNumber,
             List<Long> bidPrices,
@@ -193,8 +193,6 @@ public class DecibelTransactions {
             List<Long> askPrices,
             List<Long> askSizes,
             int chainId) throws Exception {
-        
-        AccountAddress subaccountAddr = DecibelUtils.getPrimarySubaccountAddr(account.getAccountAddress());
         
         ModuleId moduleId = new ModuleId(packageAddress, new Identifier("dex_accounts"));
         
@@ -248,6 +246,7 @@ public class DecibelTransactions {
             AptosClient client,
             Ed25519Account account,
             AccountAddress packageAddress,
+            AccountAddress subaccountAddr,
             AccountAddress marketAddress,
             long sequenceNumber,
             int chainId) throws Exception {
@@ -257,7 +256,7 @@ public class DecibelTransactions {
         List<Long> emptySizes = new ArrayList<>();
         
         return placeBulkOrders(
-            client, account, packageAddress, marketAddress,
+            client, account, packageAddress, subaccountAddr, marketAddress,
             sequenceNumber, emptyPrices, emptySizes, emptyPrices, emptySizes, chainId);
     }
 }

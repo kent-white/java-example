@@ -58,7 +58,7 @@ public class OrderExample {
         
         logger.info("Submitting transaction...");
         String txHash = DecibelTransactions.placeOrder(
-            client, account, packageAddress, marketAddress, 
+            client, account, packageAddress, subaccountAddr, marketAddress, 
             price, size, isBuy, timeInForce, isReduceOnly, chainId);
         logger.info("Transaction submitted: {}", txHash);
         logger.info("Transaction committed successfully!");
