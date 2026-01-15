@@ -18,3 +18,9 @@ trading.api.url=https://api.netna.aptoslabs.com/decibel
 # If provided, use this private key for the account. Otherwise, generate a new account.
 # Private key should be in hex format (64 characters, with or without 0x prefix)
 # account.private.key=0x1234567890abcdef...
+
+# Fee Payer Pool Configuration
+# Comma-separated list of fee payer private keys (hex format, with or without 0x prefix)
+# Example: fee_payer.private_keys=0x1234...,0x5678...,0x9abc...
+# IMPORTANT: These accounts must be pre-funded with sufficient APT for gas fees
+fee_payer.private_keys=

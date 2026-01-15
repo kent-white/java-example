@@ -7,7 +7,7 @@ This project demonstrates how to submit orders to the Decibel DEX using Java and
 This project includes two example applications:
 
 1. **OrderExample**: Submit a single order to the APT-PERP market
-2. **BulkOrderExample**: Interactive bulk order management bot that maintains a spread around a mid price
+2. **BulkOrderExample**: Interactive bulk order management bot with Fee Payer Pool for high-throughput parallel transaction submission
 
 Both examples demonstrate:
 - Account initialization (from private key or new generation)
@@ -15,6 +15,7 @@ Both examples demonstrate:
 - USDC minting and deposit to subaccount
 - Derived address calculation (subaccount, market)
 - Transaction building and submission using the Japtos SDK
+- **Fee Payer Pool**: Parallel transaction submission using multiple fee payer accounts (see [FEE_PAYER_POOL.md](FEE_PAYER_POOL.md))
 
 ## Prerequisites
 
@@ -34,12 +35,15 @@ Both examples demonstrate:
 │       ├── java/
 │       │   └── com/decibel/
 │       │       ├── OrderExample.java          # Single order example
-│       │       ├── BulkOrderExample.java      # Bulk order bot example
+│       │       ├── BulkOrderExample.java      # Bulk order bot with fee payer pool
+│       │       ├── FeePayerPool.java          # Fee payer pool manager
 │       │       ├── DecibelTransactions.java   # Transaction utilities
 │       │       ├── DecibelUtils.java          # Address derivation & utils
-│       │       └── InputUtils.java            # Config & account loading
+│       │       ├── InputUtils.java            # Config & account loading
+│       │       └── MarketConfig.java          # Market configuration
 │       └── resources/
 │           └── config.properties.example      # Configuration template
+├── FEE_PAYER_POOL.md                          # Fee payer pool documentation
 └── README.md                                  # This file
 ```
 
@@ -72,6 +76,10 @@ private.key=0xYOUR_PRIVATE_KEY_HEX
 
 # Trading API URL (for bulk orders)
 trading.api.url=https://api.netna.aptoslabs.com/decibel
+
+# Fee Payer Pool Configuration (for bulk orders)
+# Comma-separated list of pre-funded fee payer private keys
+fee_payer.private_keys=0x1234...,0x5678...,0x9abc...
 ```
 
 **Note:** If you don't provide a private key, a new account will be automatically generated and funded.
@@ -102,7 +110,7 @@ java -cp target/decibel-java-example-1.0-SNAPSHOT.jar com.decibel.OrderExample
 
 ### Bulk Order Example
 
-Run the interactive bulk order bot:
+Run the interactive bulk order bot with Fee Payer Pool:
 
 ```bash
 # Using Maven
@@ -117,6 +125,8 @@ The bulk order bot provides an interactive interface:
 - Press `2` + ENTER to move all orders DOWN 1%
 - Press `f` + ENTER to fund account (faucet + mint + deposit)
 - Press `x` + ENTER to cancel orders and exit
+
+**Fee Payer Pool**: The bulk order bot uses a pool of fee payer accounts to enable high-throughput parallel transaction submission. See [FEE_PAYER_POOL.md](FEE_PAYER_POOL.md) for details.
 
 ## Expected Output
 
@@ -140,8 +150,9 @@ https://explorer.aptoslabs.com/txn/0xabc123...?network=decibel
 ### Bulk Order Example
 
 ```
-🤖 Interactive Bulk Order Bot
-==============================
+🤖 Interactive Bulk Order Bot (with Fee Payer Pool)
+===================================================
+Fee Payers: 10 accounts
 Mid Price: $2.60
 Spread: ±1% and ±2%
 

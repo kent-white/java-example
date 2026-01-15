@@ -3,17 +3,21 @@ package com.decibel;
 import com.aptoslabs.japtos.client.AptosClient;
 import com.aptoslabs.japtos.account.Ed25519Account;
 import com.aptoslabs.japtos.core.AccountAddress;
+import com.aptoslabs.japtos.transaction.RawTransaction;
+import com.aptoslabs.japtos.types.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
 /**
  * Example Java application demonstrating interactive bulk order management on Decibel DEX.
+ * Uses FeePayerPool to distribute transaction fees across multiple fee payer accounts.
  * Press '1' to move all orders up 1%, '2' to move all orders down 1%, or 'x' to exit.
  * Orders maintain the same spread distance while moving up or down in price.
  */
@@ -26,6 +30,7 @@ public class BulkOrderExample {
     private final AccountAddress packageAddress;
     private final AccountAddress marketAddress;
     private final int chainId;
+    private final FeePayerPool feePayerPool;
     
     public BulkOrderExample() throws Exception {
         // Load configuration
@@ -42,13 +47,59 @@ public class BulkOrderExample {
         this.packageAddress = AccountAddress.fromHex(config.getProperty("deployment.package"));
         this.marketAddress = AccountAddress.fromHex("0xe6de4f6ec47f1bc2ab73920e9f202953e60482e1c1a90e7eef3ee45c8aafee36");
         this.chainId = Integer.parseInt(config.getProperty("chain.id"));
+        
+        // Initialize fee payer pool from private keys
+        String feePayerKeysStr = config.getProperty("fee_payer.private_keys", "");
+        if (feePayerKeysStr.isEmpty()) {
+            throw new IllegalArgumentException("fee_payer.private_keys must be configured in config.properties");
+        }
+        
+        String[] feePayerPrivateKeys = feePayerKeysStr.split(",");
+        for (int i = 0; i < feePayerPrivateKeys.length; i++) {
+            feePayerPrivateKeys[i] = feePayerPrivateKeys[i].trim();
+        }
+        
+        logger.info("Initializing FeePayerPool with {} fee payers", feePayerPrivateKeys.length);
+        this.feePayerPool = new FeePayerPool(client, feePayerPrivateKeys);
+        logger.info("FeePayerPool initialized successfully");
     }
     
     public String submitBulkOrders(AccountAddress subaccountAddr, long sequenceNumber, List<Long> bidPrices, List<Long> bidSizes, 
                                     List<Long> askPrices, List<Long> askSizes) throws Exception {
-        String txHash = DecibelTransactions.placeBulkOrders(
-            client, account, packageAddress, subaccountAddr, marketAddress,
-            sequenceNumber, bidPrices, bidSizes, askPrices, askSizes, chainId);
+        // Create the bulk order transaction payload
+        ModuleId moduleId = new ModuleId(packageAddress, new Identifier("dex_accounts"));
+        
+        List<TransactionArgument> functionArgs = new ArrayList<>();
+        functionArgs.add(new TransactionArgument.AccountAddress(subaccountAddr));
+        functionArgs.add(new TransactionArgument.AccountAddress(marketAddress));
+        functionArgs.add(new TransactionArgument.U64(sequenceNumber));
+        functionArgs.add(new TransactionArgument.U64Vector(bidPrices));
+        functionArgs.add(new TransactionArgument.U64Vector(bidSizes));
+        functionArgs.add(new TransactionArgument.U64Vector(askPrices));
+        functionArgs.add(new TransactionArgument.U64Vector(askSizes));
+        
+        TransactionPayload payload = new EntryFunctionPayload(
+            moduleId,
+            new Identifier("place_bulk_orders_to_subaccount"),
+            Arrays.asList(),
+            functionArgs
+        );
+        
+        long accountSequenceNumber = client.getNextSequenceNumber(account.getAccountAddress());
+        
+        RawTransaction rawTx = new RawTransaction(
+            account.getAccountAddress(),
+            accountSequenceNumber,
+            payload,
+            1000000L,
+            100L,
+            System.currentTimeMillis() / 1000 + 3600,
+            chainId
+        );
+        
+        // Submit using fee payer pool
+        String txHash = feePayerPool.submitWithFeePayer(account, rawTx);
+        client.waitForTransaction(txHash);
         
         return txHash;
     }
@@ -87,8 +138,9 @@ public class BulkOrderExample {
             double askOffset2 = 0.02;  // 2% above mid (ask 2)
             long orderSize = 100000L;
             
-            System.out.println("\n🤖 Interactive Bulk Order Bot");
-            System.out.println("==============================");
+            System.out.println("\n🤖 Interactive Bulk Order Bot (with Fee Payer Pool)");
+            System.out.println("===================================================");
+            System.out.println("Fee Payers: " + example.feePayerPool.getSize() + " accounts");
             System.out.println("Mid Price: $" + String.format("%.2f", midPrice / 100_000_000.0));
             System.out.println("Spread: ±1% and ±2%\n");
             System.out.println("Press '1' + ENTER to move all orders UP 1% (↑)");
