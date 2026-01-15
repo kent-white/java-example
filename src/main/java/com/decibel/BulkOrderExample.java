@@ -44,10 +44,10 @@ public class BulkOrderExample {
         this.chainId = Integer.parseInt(config.getProperty("chain.id"));
     }
     
-    public String submitBulkOrders(long sequenceNumber, List<Long> bidPrices, List<Long> bidSizes, 
+    public String submitBulkOrders(AccountAddress subaccountAddr, long sequenceNumber, List<Long> bidPrices, List<Long> bidSizes, 
                                     List<Long> askPrices, List<Long> askSizes) throws Exception {
         String txHash = DecibelTransactions.placeBulkOrders(
-            client, account, packageAddress, marketAddress,
+            client, account, packageAddress, subaccountAddr, marketAddress,
             sequenceNumber, bidPrices, bidSizes, askPrices, askSizes, chainId);
         
         return txHash;
@@ -114,7 +114,7 @@ public class BulkOrderExample {
                     try {
                         String txHash = DecibelTransactions.cancelBulkOrders(
                             example.client, example.account, example.packageAddress, 
-                            example.marketAddress, sequenceNumber, example.chainId);
+                            subaccountAddr, example.marketAddress, sequenceNumber, example.chainId);
                         System.out.println("✅ Orders cancelled | Tx: " + txHash.substring(0, 10) + "...");
                     } catch (Exception e) {
                         logger.error("Failed to cancel orders", e);
@@ -184,7 +184,7 @@ public class BulkOrderExample {
                     askPrices.get(0), askPrices.get(1));
                 
                 try {
-                    String txHash = example.submitBulkOrders(sequenceNumber, bidPrices, bidSizes, askPrices, askSizes);
+                    String txHash = example.submitBulkOrders(subaccountAddr, sequenceNumber, bidPrices, bidSizes, askPrices, askSizes);
                     System.out.println("✅ Orders updated For subaccount: " + subaccountAddr + " | Tx: " + txHash.substring(0, 10) + "...\n");
                     System.out.println("View on explorer:");
                     System.out.println("https://explorer.aptoslabs.com/txn/" + txHash + "?network=decibel");
