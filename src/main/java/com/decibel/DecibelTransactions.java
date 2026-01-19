@@ -206,6 +206,9 @@ public class DecibelTransactions {
         functionArgs.add(new TransactionArgument.U64Vector(bidSizes));
         functionArgs.add(new TransactionArgument.U64Vector(askPrices));
         functionArgs.add(new TransactionArgument.U64Vector(askSizes));
+        // Optional parameters
+        functionArgs.add(MoveOption.<TransactionArgument.AccountAddress>empty());
+        functionArgs.add(MoveOption.<TransactionArgument.U64>empty());
         
         TransactionPayload payload = new EntryFunctionPayload(
             moduleId,

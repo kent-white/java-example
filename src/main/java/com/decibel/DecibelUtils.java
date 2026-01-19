@@ -198,6 +198,10 @@ public class DecibelUtils {
      * @throws IOException If the API request fails
      */
     public static List<MarketConfig> getMarkets(String tradingApiUrl) throws IOException {
+        return getMarkets(tradingApiUrl, null);
+    }
+
+    public static List<MarketConfig> getMarkets(String tradingApiUrl, String apiKey) throws IOException {
         String urlString = String.format("%s/api/v1/markets", tradingApiUrl);
 
         URL url = new URL(urlString);
@@ -205,6 +209,9 @@ public class DecibelUtils {
         conn.setRequestMethod("GET");
         conn.setConnectTimeout(10000);
         conn.setReadTimeout(10000);
+        if (apiKey != null && !apiKey.isEmpty()) {
+            conn.setRequestProperty("Authorization", "Bearer " + apiKey);
+        }
 
         int responseCode = conn.getResponseCode();
         if (responseCode != 200) {
@@ -254,7 +261,12 @@ public class DecibelUtils {
      */
     public static MarketConfig getMarketConfig(String tradingApiUrl, AccountAddress marketAddr)
             throws IOException {
-        List<MarketConfig> markets = getMarkets(tradingApiUrl);
+        return getMarketConfig(tradingApiUrl, marketAddr, null);
+    }
+
+    public static MarketConfig getMarketConfig(String tradingApiUrl, AccountAddress marketAddr, String apiKey)
+            throws IOException {
+        List<MarketConfig> markets = getMarkets(tradingApiUrl, apiKey);
 
         for (MarketConfig market : markets) {
             if (market.getMarketAddr().equals(marketAddr)) {
