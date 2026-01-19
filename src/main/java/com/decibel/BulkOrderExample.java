@@ -61,11 +61,12 @@ public class BulkOrderExample {
             logger.info("Market: APT-PERP");
             logger.info("Subaccount: {}", subaccountAddr);
             
-            // Get the trading API URL from config
+            // Get the trading API URL and key from config
             String tradingApiUrl = example.config.getProperty("trading.api.url", "https://api.netna.aptoslabs.com/decibel");
+            String tradingApiKey = example.config.getProperty("trading.api.key");
 
             // Fetch market configuration
-            MarketConfig marketConfig = DecibelUtils.getMarketConfig(tradingApiUrl, example.marketAddress);
+            MarketConfig marketConfig = DecibelUtils.getMarketConfig(tradingApiUrl, example.marketAddress, tradingApiKey);
             if (marketConfig == null) {
                 throw new RuntimeException("Market configuration not found for address: " + example.marketAddress);
             }
