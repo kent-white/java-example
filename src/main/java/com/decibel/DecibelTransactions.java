@@ -76,7 +76,7 @@ public class DecibelTransactions {
             long amount,
             int chainId) throws Exception {
         
-        ModuleId moduleId = new ModuleId(packageAddress, new Identifier("dex_accounts"));
+        ModuleId moduleId = new ModuleId(packageAddress, new Identifier("dex_accounts_entry"));
         
         List<TransactionArgument> functionArgs = new ArrayList<>();
         functionArgs.add(new TransactionArgument.AccountAddress(subaccountAddr));
@@ -127,7 +127,7 @@ public class DecibelTransactions {
             boolean isReduceOnly,
             int chainId) throws Exception {
         
-        ModuleId moduleId = new ModuleId(packageAddress, new Identifier("dex_accounts"));
+        ModuleId moduleId = new ModuleId(packageAddress, new Identifier("dex_accounts_entry"));
         
         List<TransactionArgument> functionArgs = new ArrayList<>();
         functionArgs.add(new TransactionArgument.AccountAddress(subaccountAddr));
@@ -194,7 +194,7 @@ public class DecibelTransactions {
             List<Long> askSizes,
             int chainId) throws Exception {
         
-        ModuleId moduleId = new ModuleId(packageAddress, new Identifier("dex_accounts"));
+        ModuleId moduleId = new ModuleId(packageAddress, new Identifier("dex_accounts_entry"));
         
         List<TransactionArgument> functionArgs = new ArrayList<>();
         functionArgs.add(new TransactionArgument.AccountAddress(subaccountAddr));

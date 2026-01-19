@@ -49,7 +49,7 @@ public class OrderExample {
         AccountAddress packageAddress = AccountAddress.fromHex(packageAddr);
         // APT-PERP market address
         AccountAddress marketAddress = AccountAddress.fromHex("0xe6de4f6ec47f1bc2ab73920e9f202953e60482e1c1a90e7eef3ee45c8aafee36");
-        AccountAddress subaccountAddr = DecibelUtils.getPrimarySubaccountAddr(account.getAccountAddress());
+        AccountAddress subaccountAddr = DecibelUtils.getPrimarySubaccountAddr(packageAddress, account.getAccountAddress());
         
         logger.info("Market: {}", marketAddress);
         logger.info("Subaccount: {}", subaccountAddr);
