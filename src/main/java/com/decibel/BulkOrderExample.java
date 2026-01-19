@@ -57,7 +57,7 @@ public class BulkOrderExample {
         try {
             BulkOrderExample example = new BulkOrderExample();
             
-            AccountAddress subaccountAddr = DecibelUtils.getPrimarySubaccountAddr(example.account.getAccountAddress());
+            AccountAddress subaccountAddr = DecibelUtils.getPrimarySubaccountAddr(example.packageAddress, example.account.getAccountAddress());
             logger.info("Market: APT-PERP");
             logger.info("Subaccount: {}", subaccountAddr);
             
@@ -148,7 +148,7 @@ public class BulkOrderExample {
                         
                         // Deposit USDC to subaccount
                         long USDC_DEPOSIT_AMOUNT = 50_000_000L; // 50 USDC
-                        AccountAddress subaccount = DecibelUtils.getPrimarySubaccountAddr(example.account.getAccountAddress());
+                        AccountAddress subaccount = DecibelUtils.getPrimarySubaccountAddr(example.packageAddress, example.account.getAccountAddress());
                         AccountAddress usdcAddress = DecibelUtils.createObjectAddress(example.packageAddress, "USDC");
                         logger.info("Depositing {} USDC to subaccount: {}", USDC_DEPOSIT_AMOUNT / 100_000_000.0, subaccount);
                         DecibelTransactions.depositToSubaccount(example.client, example.account, example.packageAddress, 

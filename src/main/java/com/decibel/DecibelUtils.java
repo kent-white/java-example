@@ -59,17 +59,43 @@ public class DecibelUtils {
     }
     
     /**
-     * Calculate the primary subaccount address for a given account.
+     * Calculate the primary subaccount address for a given account using the new derivation method.
+     * This uses the GlobalSubaccountManager as the deriver and a BCS-serialized SubaccountSeed.
+     * 
+     * @param packageAddress The package address where the DEX is deployed
+     * @param accountAddress The owner account address
+     * @return The primary subaccount address
      */
-    public static AccountAddress getPrimarySubaccountAddr(AccountAddress accountAddress) {
+    public static AccountAddress getPrimarySubaccountAddr(AccountAddress packageAddress, AccountAddress accountAddress) {
         try {
-            byte[] seed = "decibel_dex_primary".getBytes(StandardCharsets.UTF_8);
-            
-            // Create object address using SHA3-256 hash
-            // Format: sha3-256(address + seed + 0xFE)
+            // Step 1: Create the subaccount manager address
+            byte[] managerSeed = "GlobalSubaccountManager".getBytes(StandardCharsets.UTF_8);
             MessageDigest digest = MessageDigest.getInstance("SHA3-256");
-            digest.update(accountAddress.toBytes());
-            digest.update(seed);
+            digest.update(packageAddress.toBytes());
+            digest.update(managerSeed);
+            digest.update((byte) 0xFE); // Object address marker
+            byte[] managerHash = digest.digest();
+            AccountAddress subaccountManager = AccountAddress.fromBytes(managerHash);
+            
+            // Step 2: Create the SubaccountSeed structure
+            // The seed is: [owner_address_bytes + BCS_encoded_MoveString("primary_subaccount")]
+            // BCS encoding of MoveString: length as ULEB128 + string bytes
+            String seedString = "primary_subaccount";
+            byte[] seedStringBytes = seedString.getBytes(StandardCharsets.UTF_8);
+            
+            // BCS encode the string length as ULEB128 (for strings < 128 chars, it's just 1 byte)
+            byte[] bcsLength = new byte[] { (byte) seedStringBytes.length };
+            
+            // Construct the full seed: owner_address + BCS(MoveString)
+            byte[] fullSeed = new byte[accountAddress.toBytes().length + bcsLength.length + seedStringBytes.length];
+            System.arraycopy(accountAddress.toBytes(), 0, fullSeed, 0, accountAddress.toBytes().length);
+            System.arraycopy(bcsLength, 0, fullSeed, accountAddress.toBytes().length, bcsLength.length);
+            System.arraycopy(seedStringBytes, 0, fullSeed, accountAddress.toBytes().length + bcsLength.length, seedStringBytes.length);
+            
+            // Step 3: Create the primary subaccount address
+            digest = MessageDigest.getInstance("SHA3-256");
+            digest.update(subaccountManager.toBytes());
+            digest.update(fullSeed);
             digest.update((byte) 0xFE); // Object address marker
             
             byte[] hash = digest.digest();

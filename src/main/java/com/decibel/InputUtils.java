@@ -70,7 +70,7 @@ public class InputUtils {
             logger.info("✅ USDC minted");
             
             // Deposit USDC to primary subaccount
-            AccountAddress subaccountAddr = DecibelUtils.getPrimarySubaccountAddr(account.getAccountAddress());
+            AccountAddress subaccountAddr = DecibelUtils.getPrimarySubaccountAddr(packageAddress, account.getAccountAddress());
             logger.info("Depositing {} USDC to subaccount: {}", USDC_DEPOSIT_AMOUNT / 100_000_000.0, subaccountAddr);
             AccountAddress usdcAddress = DecibelUtils.createObjectAddress(packageAddress, "USDC");
             DecibelTransactions.depositToSubaccount(client, account, packageAddress, subaccountAddr, usdcAddress, USDC_DEPOSIT_AMOUNT, chainId);
